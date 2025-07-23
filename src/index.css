@@ -8,47 +8,47 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 27%;
+    --background: 320 30% 96%;
+    --foreground: 340 15% 35%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card: 310 25% 98%;
+    --card-foreground: 340 15% 35%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover: 310 25% 98%;
+    --popover-foreground: 340 15% 35%;
 
-    --primary: 214 84% 56%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 280 45% 75%;
+    --primary-foreground: 340 15% 25%;
 
-    --secondary: 210 40% 95%;
-    --secondary-foreground: 215 25% 27%;
+    --secondary: 200 35% 88%;
+    --secondary-foreground: 340 15% 35%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 20% 45%;
+    --muted: 210 30% 92%;
+    --muted-foreground: 340 10% 55%;
 
-    --accent: 142 76% 36%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 160 40% 70%;
+    --accent-foreground: 340 15% 25%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 15 50% 75%;
+    --destructive-foreground: 340 15% 25%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 214 84% 56%;
+    --border: 280 25% 88%;
+    --input: 280 25% 88%;
+    --ring: 280 45% 75%;
 
-    --verified: 142 76% 36%;
-    --verified-foreground: 0 0% 98%;
+    --verified: 160 40% 70%;
+    --verified-foreground: 340 15% 25%;
     
-    --warning: 45 93% 47%;
-    --warning-foreground: 0 0% 98%;
+    --warning: 50 55% 75%;
+    --warning-foreground: 340 15% 25%;
     
-    --revoked: 0 84% 60%;
-    --revoked-foreground: 0 0% 98%;
+    --revoked: 15 50% 75%;
+    --revoked-foreground: 340 15% 25%;
     
-    --gradient-primary: linear-gradient(135deg, hsl(214 84% 56%), hsl(214 84% 66%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
-    --shadow-document: 0 4px 20px -4px hsl(214 84% 56% / 0.25);
-    --shadow-verified: 0 4px 20px -4px hsl(142 76% 36% / 0.25);
+    --gradient-primary: linear-gradient(135deg, hsl(280 45% 75%), hsl(280 45% 82%));
+    --gradient-success: linear-gradient(135deg, hsl(160 40% 70%), hsl(160 40% 77%));
+    --shadow-document: 0 4px 20px -4px hsl(280 45% 75% / 0.2);
+    --shadow-verified: 0 4px 20px -4px hsl(160 40% 70% / 0.2);
 
     --radius: 0.5rem;
 
