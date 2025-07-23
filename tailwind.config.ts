@@ -52,6 +52,18 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				verified: {
+					DEFAULT: 'hsl(var(--verified))',
+					foreground: 'hsl(var(--verified-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				revoked: {
+					DEFAULT: 'hsl(var(--revoked))',
+					foreground: 'hsl(var(--revoked-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
