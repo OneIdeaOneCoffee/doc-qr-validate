@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validador de QR Code</title>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <title>Validador de Documentos QR</title>
     <style>
         * {
             margin: 0;
@@ -17,18 +16,16 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 20px;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            -webkit-backdrop-filter: blur(10px);
-                    backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
             max-width: 500px;
             width: 100%;
             text-align: center;
@@ -38,383 +35,273 @@
             color: #333;
             margin-bottom: 30px;
             font-size: 2rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
-        .step {
-            display: none;
-            animation: fadeIn 0.5s ease-in;
+        .scanner-container {
+            margin: 20px 0;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
-        .step.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        #reader {
+        #qr-reader {
             width: 100%;
             max-width: 400px;
-            margin: 20px auto;
-            border-radius: 10px;
-            overflow: hidden;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .result {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            border-left: 4px solid #28a745;
-        }
-
-        .error {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            border-left: 4px solid #dc3545;
-            color: #721c24;
-        }
-
-        .info {
-            background: #e3f2fd;
-            border-radius: 10px;
+            margin-top: 20px;
             padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .status {
             margin: 15px 0;
-            border-left: 4px solid #2196f3;
-            color: #0d47a1;
-        }
-
-        .qr-text {
-            font-family: 'Courier New', monospace;
-            background: #f1f3f4;
             padding: 10px;
             border-radius: 5px;
-            word-break: break-all;
-            margin: 10px 0;
+            background-color: #e9ecef;
+            color: #495057;
         }
 
-        .debug {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 0.9rem;
-            text-align: left;
-        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
 
-        .debug h4 {
-            margin-bottom: 5px;
-            color: #856404;
-        }
-
-        .debug pre {
-            font-size: 0.8rem;
-            overflow-x: auto;
+            h1 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔍 Validador de QR Code</h1>
+        <h1>🔍 Validador de Documentos QR</h1>
 
-        <!-- Step 1: Início -->
-        <div id="step1" class="step active">
-            <p>Escaneie um QR code para validar seu conteúdo</p>
-            <br>
-            <button onclick="startScanner()">📱 Iniciar Escaneamento</button>
+        <div class="status" id="status">
+            Clique em "Iniciar Scanner" para começar
         </div>
 
-        <!-- Step 2: Scanner -->
-        <div id="step2" class="step">
-            <div class="info">
-                <p>📸 Posicione o QR code na frente da câmera</p>
-            </div>
-            <div id="reader"></div>
-            <button onclick="stopScanner()" style="background: #dc3545; margin-top: 15px;">
-                ⏹️ Parar Scanner
-            </button>
-
-            <!-- Debug Info -->
-            <div id="debugInfo" class="debug" style="display: none;">
-                <h4>Debug Info:</h4>
-                <pre id="debugLog"></pre>
+        <div class="scanner-container">
+            <div id="qr-reader"></div>
+            <div id="camera-placeholder" style="display: none;">
+                <p>📷 Aguardando acesso à câmera...</p>
             </div>
         </div>
 
-        <!-- Step 3: Resultado -->
-        <div id="step3" class="step">
-            <div id="result"></div>
-            <button onclick="resetScanner()">🔄 Escanear Novamente</button>
+        <div class="controls">
+            <button class="btn" id="start-scan">Iniciar Scanner</button>
+            <button class="btn" id="stop-scan" style="display: none;">Parar Scanner</button>
         </div>
+
+        <div class="loading" id="loading">
+            <p>🔄 Processando QR Code...</p>
+        </div>
+
+        <div id="result"></div>
     </div>
 
+    <!-- QR Code Scanner Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
     <script>
-        let html5QrCode;
-        let isScanning = false;
+        class QRValidator {
+            constructor() {
+                this.html5QrCode = null;
+                this.isScanning = false;
+                this.initializeElements();
+                this.attachEventListeners();
+            }
 
-        // Debug logging
-        function debugLog(message) {
-            console.log('[QR Debug]', message);
-            const debugElement = document.getElementById('debugLog');
-            if (debugElement) {
-                debugElement.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
-                document.getElementById('debugInfo').style.display = 'block';
+            initializeElements() {
+                this.startBtn = document.getElementById('start-scan');
+                this.stopBtn = document.getElementById('stop-scan');
+                this.resultDiv = document.getElementById('result');
+                this.statusDiv = document.getElementById('status');
+                this.loadingDiv = document.getElementById('loading');
+                this.qrReaderDiv = document.getElementById('qr-reader');
+            }
+
+            attachEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startScanning());
+                this.stopBtn.addEventListener('click', () => this.stopScanning());
+            }
+
+            updateStatus(message, type = 'info') {
+                this.statusDiv.textContent = message;
+                this.statusDiv.className = `status ${type}`;
+            }
+
+            async startScanning() {
+                try {
+                    this.updateStatus('Iniciando câmera...', 'info');
+
+                    // Verificar se o navegador suporta câmera
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error('Câmera não suportada neste navegador');
+                    }
+
+                    this.html5QrCode = new Html5Qrcode("qr-reader");
+
+                    const config = {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0
+                    };
+
+                    await this.html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        this.onScanSuccess.bind(this),
+                        this.onScanFailure.bind(this)
+                    );
+
+                    this.isScanning = true;
+                    this.startBtn.style.display = 'none';
+                    this.stopBtn.style.display = 'inline-block';
+                    this.updateStatus('Scanner ativo - Aponte para um QR Code', 'success');
+
+                } catch (error) {
+                    console.error('Erro ao iniciar scanner:', error);
+                    this.updateStatus(`Erro: ${error.message}`, 'error');
+                    this.showResult(`❌ Falha ao acessar câmera: ${error.message}`, 'error');
+                }
+            }
+
+            async stopScanning() {
+                if (this.html5QrCode && this.isScanning) {
+                    try {
+                        await this.html5QrCode.stop();
+                        this.html5QrCode.clear();
+                        this.isScanning = false;
+                        this.startBtn.style.display = 'inline-block';
+                        this.stopBtn.style.display = 'none';
+                        this.updateStatus('Scanner parado', 'info');
+                    } catch (error) {
+                        console.error('Erro ao parar scanner:', error);
+                    }
+                }
+            }
+
+            onScanSuccess(decodedText, decodedResult) {
+                console.log('QR Code detectado:', decodedText);
+                this.loadingDiv.classList.add('show');
+
+                // Simular validação (substitua pela sua lógica)
+                setTimeout(() => {
+                    this.validateDocument(decodedText);
+                    this.loadingDiv.classList.remove('show');
+                }, 1000);
+            }
+
+            onScanFailure(error) {
+                // Erro silencioso durante scan (normal)
+                // console.log('Erro de scan (normal):', error);
+            }
+
+            validateDocument(qrData) {
+                try {
+                    // Exemplo de validação básica
+                    if (qrData.length < 10) {
+                        throw new Error('QR Code muito curto para ser um documento válido');
+                    }
+
+                    // Verificar se contém elementos de um documento válido
+                    const hasValidStructure = qrData.includes('http') ||
+                                            qrData.includes('doc:') ||
+                                            qrData.includes('id:') ||
+                                            /\d{11}/.test(qrData); // CPF pattern
+
+                    if (hasValidStructure) {
+                        this.showResult(`✅ Documento VÁLIDO
+
+Dados: ${qrData.substring(0, 100)}${qrData.length > 100 ? '...' : ''}
+
+Timestamp: ${new Date().toLocaleString()}`, 'success');
+                    } else {
+                        this.showResult(`⚠️ QR Code lido, mas estrutura não reconhecida como documento válido
+
+Conteúdo: ${qrData.substring(0, 100)}${qrData.length > 100 ? '...' : ''}`, 'error');
+                    }
+
+                } catch (error) {
+                    this.showResult(`❌ Erro na validação: ${error.message}`, 'error');
+                }
+            }
+
+            showResult(message, type) {
+                this.resultDiv.innerHTML = `<div class="result ${type}">${message.replace(/\n/g, '<br>')}</div>`;
             }
         }
 
-        function showStep(stepNumber) {
-            debugLog(`Showing step ${stepNumber}`);
-
-            // Hide all steps
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('active');
-            });
-
-            // Show selected step
-            document.getElementById(`step${stepNumber}`).classList.add('active');
-        }
-
-        function startScanner() {
-            debugLog('Starting scanner...');
-            showStep(2);
-
-            // Initialize Html5QrCode
-            html5QrCode = new Html5Qrcode("reader");
-
-            // Configuration
-            const config = {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-            };
-
-            debugLog('Scanner configuration: ' + JSON.stringify(config));
-
-            // Start scanning
-            html5QrCode.start(
-                { facingMode: "environment" }, // Use back camera
-                config,
-                onScanSuccess,
-                onScanFailure
-            ).then(() => {
-                isScanning = true;
-                debugLog('Scanner started successfully');
-            }).catch(err => {
-                debugLog('Error starting scanner: ' + err);
-                showError('Erro ao iniciar a câmera: ' + err);
-                showStep(1);
-            });
-        }
-
-        function onScanSuccess(decodedText, decodedResult) {
-            debugLog('QR Code detected: ' + decodedText);
-            debugLog('Full result: ' + JSON.stringify(decodedResult));
-
-            // Stop scanner immediately
-            stopScanner();
-
-            // Show result
-            showResult(decodedText, decodedResult);
-            showStep(3);
-        }
-
-        function onScanFailure(error) {
-            // This is called continuously while scanning, so we don't log every failure
-            // debugLog('Scan failure: ' + error);
-        }
-
-        function stopScanner() {
-            if (html5QrCode && isScanning) {
-                debugLog('Stopping scanner...');
-
-                html5QrCode.stop().then(() => {
-                    debugLog('Scanner stopped successfully');
-                    isScanning = false;
-                }).catch(err => {
-                    debugLog('Error stopping scanner: ' + err);
-                    isScanning = false;
-                });
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                new QRValidator();
+            } catch (error) {
+                console.error('Erro ao inicializar aplicação:', error);
+                document.getElementById('result').innerHTML =
+                    `<div class="result error">❌ Erro ao carregar aplicação: ${error.message}</div>`;
             }
-        }
-
-        function showResult(decodedText, decodedResult) {
-            debugLog('Showing result for: ' + decodedText);
-
-            const resultDiv = document.getElementById('result');
-
-            let resultHTML = `
-                <div class="result">
-                    <h3>✅ QR Code Lido com Sucesso!</h3>
-                    <div class="qr-text">${escapeHtml(decodedText)}</div>
-                </div>
-            `;
-
-            // Analyze content
-            const analysis = analyzeQRContent(decodedText);
-            resultHTML += `
-                <div class="info">
-                    <h4>📊 Análise do Conteúdo:</h4>
-                    <p><strong>Tipo:</strong> ${analysis.type}</p>
-                    <p><strong>Descrição:</strong> ${analysis.description}</p>
-                    ${analysis.action ? `<p><strong>Ação:</strong> ${analysis.action}</p>` : ''}
-                </div>
-            `;
-
-            resultDiv.innerHTML = resultHTML;
-        }
-
-        function analyzeQRContent(text) {
-            debugLog('Analyzing QR content: ' + text);
-
-            // URL Detection
-            if (text.match(/^https?:\/\//i)) {
-                return {
-                    type: 'URL',
-                    description: 'Link para website',
-                    action: 'Clique para abrir o link'
-                };
-            }
-
-            // Email Detection
-            if (text.match(/^mailto:/i)) {
-                return {
-                    type: 'Email',
-                    description: 'Endereço de email',
-                    action: 'Clique para enviar email'
-                };
-            }
-
-            // Phone Detection
-            if (text.match(/^tel:/i) || text.match(/^\+?[\d\s\-\(\)]+$/)) {
-                return {
-                    type: 'Telefone',
-                    description: 'Número de telefone',
-                    action: 'Clique para ligar'
-                };
-            }
-
-            // Wi-Fi Detection
-            if (text.startsWith('WIFI:')) {
-                return {
-                    type: 'Wi-Fi',
-                    description: 'Configuração de rede Wi-Fi',
-                    action: 'Use para conectar à rede'
-                };
-            }
-
-            // SMS Detection
-            if (text.match(/^sms:/i)) {
-                return {
-                    type: 'SMS',
-                    description: 'Mensagem de texto',
-                    action: 'Clique para enviar SMS'
-                };
-            }
-
-            // vCard Detection
-            if (text.startsWith('BEGIN:VCARD')) {
-                return {
-                    type: 'Contato',
-                    description: 'Informações de contato (vCard)',
-                    action: 'Salve na agenda'
-                };
-            }
-
-            // Location Detection
-            if (text.match(/^geo:/i)) {
-                return {
-                    type: 'Localização',
-                    description: 'Coordenadas geográficas',
-                    action: 'Abrir no mapa'
-                };
-            }
-
-            // Default
-            return {
-                type: 'Texto',
-                description: 'Conteúdo de texto simples',
-                action: null
-            };
-        }
-
-        function showError(message) {
-            debugLog('Error: ' + message);
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = `
-                <div class="error">
-                    <h3>❌ Erro</h3>
-                    <p>${escapeHtml(message)}</p>
-                </div>
-            `;
-            showStep(3);
-        }
-
-        function resetScanner() {
-            debugLog('Resetting scanner...');
-
-            // Clear debug info
-            document.getElementById('debugLog').textContent = '';
-            document.getElementById('debugInfo').style.display = 'none';
-
-            // Stop scanner if still running
-            stopScanner();
-
-            // Reset to initial state
-            showStep(1);
-        }
-
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-        }
-
-        // Initialize
-        debugLog('Page loaded, ready to scan');
-
-        // Add error handling for the page
-        window.addEventListener('error', function(e) {
-            debugLog('Global error: ' + e.error);
-            showError('Erro inesperado: ' + e.error.message);
         });
+
+        // Service Worker para PWA (opcional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registrado'))
+                    .catch(error => console.log('SW falhou'));
+            });
+        }
     </script>
 </body>
 </html>
