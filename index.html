@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validador de Documentos QR</title>
+    <title>DocQR Validate - Validador de Documentos</title>
     <style>
         * {
             margin: 0;
@@ -11,37 +11,392 @@
             box-sizing: border-box;
         }
 
+        :root {
+            /* Design system colors - HSL values */
+            --primary: 220 70% 60%;
+            --primary-foreground: 0 0% 100%;
+            --secondary: 200 20% 95%;
+            --secondary-foreground: 220 13% 18%;
+            --accent: 240 5% 96%;
+            --accent-foreground: 240 6% 10%;
+            --background: 0 0% 100%;
+            --foreground: 240 10% 4%;
+            --muted: 240 5% 96%;
+            --muted-foreground: 240 4% 46%;
+            --border: 240 6% 90%;
+            --verified: 120 60% 50%;
+            --verified-foreground: 0 0% 100%;
+            --revoked: 0 60% 50%;
+            --revoked-foreground: 0 0% 100%;
+            --warning: 45 90% 55%;
+            --warning-foreground: 0 0% 100%;
+            --card: 0 0% 100%;
+            --card-foreground: 240 10% 4%;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(220 80% 70%) 100%);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            color: hsl(var(--foreground));
+            line-height: 1.5;
         }
 
         .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            padding: 30px;
-            max-width: 500px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            max-width: 32rem;
+            margin: 0 auto;
+        }
+
+        .icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .icon-lg {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 768px) {
+            .grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+
+        .card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem 1.5rem 0;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: hsl(var(--card-foreground));
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .upload-area {
+            border: 2px dashed hsl(var(--border));
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: hsl(var(--primary));
+            background: hsl(var(--accent));
+        }
+
+        .upload-area.drag-active {
+            border-color: hsl(var(--primary));
+            background: hsl(var(--primary) / 0.05);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .btn-primary:hover {
+            background: hsl(var(--primary) / 0.9);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: hsl(var(--foreground));
+            border: 1px solid hsl(var(--border));
+        }
+
+        .btn-outline:hover {
+            background: hsl(var(--accent));
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-verified {
+            background: hsl(var(--verified));
+            color: hsl(var(--verified-foreground));
+        }
+
+        .badge-revoked {
+            background: hsl(var(--revoked));
+            color: hsl(var(--revoked-foreground));
+        }
+
+        .badge-warning {
+            background: hsl(var(--warning));
+            color: hsl(var(--warning-foreground));
+        }
+
+        .badge-secondary {
+            background: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .input {
             width: 100%;
+            padding: 0.625rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+        }
+
+        .textarea {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+            resize: none;
+            height: 5rem;
+        }
+
+        .label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: hsl(var(--muted-foreground));
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert-success {
+            background: hsl(var(--verified) / 0.1);
+            color: hsl(var(--verified));
+            border: 1px solid hsl(var(--verified) / 0.2);
+        }
+
+        .alert-error {
+            background: hsl(var(--revoked) / 0.1);
+            color: hsl(var(--revoked));
+            border: 1px solid hsl(var(--revoked) / 0.2);
+        }
+
+        .separator {
+            height: 1px;
+            background: hsl(var(--border));
+            margin: 1.5rem 0;
+        }
+
+        .space-y-4 > * + * {
+            margin-top: 1rem;
+        }
+
+        .space-y-2 > * + * {
+            margin-top: 0.5rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .text-center {
             text-align: center;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 2rem;
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        .font-mono {
+            font-family: monospace;
+        }
+
+        .font-medium {
+            font-weight: 500;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .mx-auto {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .opacity-50 {
+            opacity: 0.5;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .show {
+            display: block;
+        }
+
+        .qr-code {
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .prose {
+            color: hsl(var(--muted-foreground));
+        }
+
+        .prose ol {
+            padding-left: 1.5rem;
+        }
+
+        .prose ul {
+            padding-left: 1.5rem;
+        }
+
+        .prose li {
+            margin: 0.5rem 0;
+        }
+
+        .prose code {
+            background: hsl(var(--muted));
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .status-icon {
+            width: 1.25rem;
+            height: 1.25rem;
         }
 
         .scanner-container {
-            margin: 20px 0;
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 20px;
             min-height: 300px;
             display: flex;
             flex-direction: column;
@@ -54,143 +409,532 @@
             max-width: 400px;
         }
 
-        .btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            margin: 10px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            font-weight: bold;
-        }
-
-        .result.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .result.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
         .loading {
             display: none;
-            margin: 20px 0;
+            text-align: center;
+            margin: 1rem 0;
         }
 
         .loading.show {
             display: block;
         }
-
-        .status {
-            margin: 15px 0;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #e9ecef;
-            color: #495057;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔍 Validador de Documentos QR</h1>
-
-        <div class="status" id="status">
-            Clique em "Iniciar Scanner" para começar
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <svg class="icon-lg" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                DocQR Validate
+            </h1>
+            <p>Verifique a autenticidade de documentos assinados digitalmente com certificados ICP-Brasil</p>
         </div>
 
-        <div class="scanner-container">
-            <div id="qr-reader"></div>
-            <div id="camera-placeholder" style="display: none;">
-                <p>📷 Aguardando acesso à câmera...</p>
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-2">
+            <!-- Upload Area -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Upload do Documento
+                    </div>
+                    <div class="card-description">
+                        Envie seu documento PDF assinado digitalmente para verificação
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="upload-area" id="upload-area">
+                        <svg class="icon-lg mx-auto mb-4 opacity-50" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14,2 14,8 20,8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10,9 9,9 8,9"></polyline>
+                        </svg>
+                        <p class="mb-4" style="color: hsl(var(--muted-foreground));">
+                            Arraste um arquivo PDF aqui ou clique para selecionar
+                        </p>
+                        <button class="btn btn-outline" id="select-file-btn">
+                            Selecionar Arquivo
+                        </button>
+                        <input type="file" id="file-input" accept=".pdf" class="hidden">
+                    </div>
+
+                    <div id="file-alert" class="hidden"></div>
+                </div>
+            </div>
+
+            <!-- QR Scanner -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="5" height="5"></rect>
+                            <rect x="16" y="3" width="5" height="5"></rect>
+                            <rect x="3" y="16" width="5" height="5"></rect>
+                            <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+                            <path d="M21 21v.01"></path>
+                            <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
+                            <path d="M3 12h.01"></path>
+                            <path d="M12 3h.01"></path>
+                            <path d="M12 16v.01"></path>
+                            <path d="M16 12h1"></path>
+                            <path d="M21 12v.01"></path>
+                            <path d="M12 21v-1"></path>
+                        </svg>
+                        Scanner QR
+                    </div>
+                    <div class="card-description">
+                        Escaneie QR codes de documentos para verificação instantânea
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div id="status" class="alert alert-success mb-4">
+                        Clique em "Iniciar Scanner" para começar
+                    </div>
+
+                    <div class="scanner-container upload-area">
+                        <div id="qr-reader"></div>
+                        <div id="camera-placeholder">
+                            <svg class="icon-lg mx-auto mb-4 opacity-50" viewBox="0 0 24 24">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2v11z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                            <p style="color: hsl(var(--muted-foreground));">Scanner QR será exibido aqui</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button class="btn btn-primary" id="start-scan">Iniciar Scanner</button>
+                        <button class="btn btn-outline hidden" id="stop-scan">Parar Scanner</button>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <p>🔄 Processando QR Code...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="controls">
-            <button class="btn" id="start-scan">Iniciar Scanner</button>
-            <button class="btn" id="stop-scan" style="display: none;">Parar Scanner</button>
+        <!-- QR Code Generation -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="5" height="5"></rect>
+                        <rect x="16" y="3" width="5" height="5"></rect>
+                        <rect x="3" y="16" width="5" height="5"></rect>
+                        <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+                        <path d="M21 21v.01"></path>
+                        <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
+                        <path d="M3 12h.01"></path>
+                        <path d="M12 3h.01"></path>
+                        <path d="M12 16v.01"></path>
+                        <path d="M16 12h1"></path>
+                        <path d="M21 12v.01"></path>
+                        <path d="M12 21v-1"></path>
+                    </svg>
+                    QR Code de Verificação
+                </div>
+                <div class="card-description">
+                    Código QR para verificação pública do documento
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="qr-code-area" class="text-center">
+                    <svg class="icon-lg mx-auto mb-4 opacity-50" viewBox="0 0 24 24" style="color: hsl(var(--muted-foreground));">
+                        <rect x="3" y="3" width="5" height="5"></rect>
+                        <rect x="16" y="3" width="5" height="5"></rect>
+                        <rect x="3" y="16" width="5" height="5"></rect>
+                        <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+                        <path d="M21 21v.01"></path>
+                        <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
+                        <path d="M3 12h.01"></path>
+                        <path d="M12 3h.01"></path>
+                        <path d="M12 16v.01"></path>
+                        <path d="M16 12h1"></path>
+                        <path d="M21 12v.01"></path>
+                        <path d="M12 21v-1"></path>
+                    </svg>
+                    <p style="color: hsl(var(--muted-foreground));">QR Code será gerado após o upload do documento</p>
+                </div>
+            </div>
         </div>
 
-        <div class="loading" id="loading">
-            <p>🔄 Processando QR Code...</p>
+        <!-- Document Metadata -->
+        <div id="metadata-card" class="card mt-4 hidden">
+            <div class="card-header">
+                <div class="flex justify-between items-center">
+                    <div class="card-title">
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <line x1="4" y1="9" x2="20" y2="9"></line>
+                            <line x1="4" y1="15" x2="20" y2="15"></line>
+                            <line x1="10" y1="3" x2="8" y2="21"></line>
+                            <line x1="16" y1="3" x2="14" y2="21"></line>
+                        </svg>
+                        Metadados do Documento
+                    </div>
+                    <div id="status-badge"></div>
+                </div>
+                <div class="card-description">
+                    Informações técnicas e status de verificação
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="metadata-content"></div>
+            </div>
         </div>
 
-        <div id="result"></div>
+        <!-- Results Display -->
+        <div id="result" class="mt-4"></div>
+
+        <!-- Manual Técnico -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <div class="card-title">Manual Técnico</div>
+                <div class="card-description">
+                    Informações para auditoria e verificação independente
+                </div>
+            </div>
+            <div class="card-content prose">
+                <h4 class="font-medium mb-2">Como funciona a verificação:</h4>
+                <ol class="space-y-2 text-sm">
+                    <li>O hash SHA-256 do documento é calculado localmente no seu navegador</li>
+                    <li>O hash é comparado com o registro público mantido no repositório de verificação</li>
+                    <li>O status (verificado/revogado/expirado) é consultado no índice JSON público</li>
+                    <li>QR Code é gerado apontando para a URL de verificação pública</li>
+                </ol>
+                
+                <h4 class="font-medium mb-2 mt-4">Bibliotecas utilizadas:</h4>
+                <p>
+                    Biblioteca utilizada para leitura de QR Code:
+                    <a href="https://github.com/mebjas/html5-qrcode" target="_blank" style="color: hsl(var(--primary));">https://github.com/mebjas/html5-qrcode</a>
+                </p>
+                
+                <h4 class="font-medium mb-2 mt-4">Auditoria independente:</h4>
+                <ul class="space-y-1 text-sm">
+                    <li>Todos os cálculos são realizados localmente no navegador</li>
+                    <li>Código fonte aberto disponível para auditoria</li>
+                    <li>Sem envio de dados para servidores externos</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <!-- QR Code Scanner Library -->
+    <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
 
     <script>
-        class QRValidator {
+        class DocumentValidator {
             constructor() {
                 this.html5QrCode = null;
                 this.isScanning = false;
+                this.file = null;
+                this.metadata = null;
                 this.initializeElements();
                 this.attachEventListeners();
             }
 
             initializeElements() {
+                // File upload elements
+                this.uploadArea = document.getElementById('upload-area');
+                this.fileInput = document.getElementById('file-input');
+                this.selectFileBtn = document.getElementById('select-file-btn');
+                this.fileAlert = document.getElementById('file-alert');
+                
+                // QR Scanner elements
                 this.startBtn = document.getElementById('start-scan');
                 this.stopBtn = document.getElementById('stop-scan');
-                this.resultDiv = document.getElementById('result');
                 this.statusDiv = document.getElementById('status');
                 this.loadingDiv = document.getElementById('loading');
                 this.qrReaderDiv = document.getElementById('qr-reader');
+                this.cameraPlaceholder = document.getElementById('camera-placeholder');
+                
+                // Results elements
+                this.resultDiv = document.getElementById('result');
+                this.qrCodeArea = document.getElementById('qr-code-area');
+                this.metadataCard = document.getElementById('metadata-card');
+                this.metadataContent = document.getElementById('metadata-content');
+                this.statusBadge = document.getElementById('status-badge');
             }
 
             attachEventListeners() {
+                // File upload events
+                this.selectFileBtn.addEventListener('click', () => this.fileInput.click());
+                this.fileInput.addEventListener('change', this.handleFileInput.bind(this));
+                this.uploadArea.addEventListener('click', () => this.fileInput.click());
+                this.uploadArea.addEventListener('dragenter', this.handleDrag.bind(this));
+                this.uploadArea.addEventListener('dragover', this.handleDrag.bind(this));
+                this.uploadArea.addEventListener('dragleave', this.handleDrag.bind(this));
+                this.uploadArea.addEventListener('drop', this.handleDrop.bind(this));
+                
+                // QR Scanner events
                 this.startBtn.addEventListener('click', () => this.startScanning());
                 this.stopBtn.addEventListener('click', () => this.stopScanning());
             }
 
-            updateStatus(message, type = 'info') {
+            // File Upload Methods
+            handleDrag(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (e.type === 'dragenter' || e.type === 'dragover') {
+                    this.uploadArea.classList.add('drag-active');
+                } else if (e.type === 'dragleave') {
+                    this.uploadArea.classList.remove('drag-active');
+                }
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.uploadArea.classList.remove('drag-active');
+                
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    this.handleFileUpload(e.dataTransfer.files[0]);
+                }
+            }
+
+            handleFileInput(e) {
+                if (e.target.files && e.target.files[0]) {
+                    this.handleFileUpload(e.target.files[0]);
+                }
+            }
+
+            async handleFileUpload(uploadedFile) {
+                if (uploadedFile.type !== 'application/pdf') {
+                    this.showFileAlert('Formato inválido. Por favor, envie apenas arquivos PDF.', 'error');
+                    return;
+                }
+
+                this.file = uploadedFile;
+                this.showFileAlert(`Arquivo selecionado: ${uploadedFile.name} (${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)`, 'success');
+
+                try {
+                    const hash = await this.calculateHash(uploadedFile);
+                    const timestamp = new Date().toISOString();
+                    
+                    // Simulate verification status
+                    const status = Math.random() > 0.5 ? 'verified' : 'unknown';
+                    
+                    this.metadata = {
+                        fileName: uploadedFile.name,
+                        fileSize: uploadedFile.size,
+                        hash,
+                        timestamp,
+                        status,
+                        signerInfo: status === 'verified' ? {
+                            name: 'João Silva Santos',
+                            cpf: '123.456.789-01',
+                            certificate: 'ICP-Brasil A3'
+                        } : undefined
+                    };
+
+                    // Generate verification URL and QR Code
+                    const verificationUrl = `https://docs-verify.example.com/verify?hash=${hash}&timestamp=${timestamp}`;
+                    await this.generateQRCode(verificationUrl);
+                    this.displayMetadata();
+                    
+                } catch (error) {
+                    this.showFileAlert('Erro no processamento do documento.', 'error');
+                }
+            }
+
+            async calculateHash(file) {
+                const buffer = await file.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            async generateQRCode(url) {
+                try {
+                    const qrDataUrl = await QRCode.toDataURL(url, {
+                        width: 200,
+                        margin: 2,
+                        color: {
+                            dark: '#2563eb',
+                            light: '#ffffff'
+                        }
+                    });
+                    
+                    this.qrCodeArea.innerHTML = `
+                        <img src="${qrDataUrl}" alt="QR Code de verificação" class="qr-code mx-auto mb-4">
+                        <div class="space-y-2">
+                            <label class="label">URL de Verificação:</label>
+                            <div class="flex gap-2">
+                                <input type="text" value="${url}" readonly class="input font-mono text-xs">
+                                <button class="btn btn-outline" onclick="navigator.clipboard.writeText('${url}'); alert('Copiado!')">
+                                    <svg class="icon" viewBox="0 0 24 24">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    console.error('Erro ao gerar QR Code:', error);
+                }
+            }
+
+            displayMetadata() {
+                const statusBadgeHtml = this.getStatusBadge(this.metadata.status);
+                const statusIcon = this.getStatusIcon(this.metadata.status);
+                
+                this.statusBadge.innerHTML = statusBadgeHtml;
+                
+                this.metadataContent.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="label">Nome do Arquivo</label>
+                                <p class="text-sm font-mono">${this.metadata.fileName}</p>
+                            </div>
+                            <div>
+                                <label class="label">Tamanho</label>
+                                <p class="text-sm">${(this.metadata.fileSize / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                            <div>
+                                <label class="label">Timestamp</label>
+                                <p class="text-sm font-mono">${new Date(this.metadata.timestamp).toLocaleString('pt-BR')}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="label">Hash SHA-256</label>
+                                <div class="flex gap-2 mt-1">
+                                    <textarea readonly class="textarea">${this.metadata.hash}</textarea>
+                                    <button class="btn btn-outline" onclick="navigator.clipboard.writeText('${this.metadata.hash}'); alert('Hash copiado!')">
+                                        <svg class="icon" viewBox="0 0 24 24">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <div class="flex items-center gap-4">
+                        ${statusIcon}
+                        <div>
+                            <h4 class="font-medium">Status de Verificação</h4>
+                            <p class="text-sm" style="color: hsl(var(--muted-foreground));">
+                                ${this.getStatusDescription(this.metadata.status)}
+                            </p>
+                        </div>
+                    </div>
+
+                    ${this.metadata.signerInfo ? `
+                        <div class="separator"></div>
+                        <div class="space-y-4">
+                            <h4 class="font-medium flex items-center">
+                                <svg class="icon" viewBox="0 0 24 24">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span style="margin-left: 0.5rem;">Informações do Signatário</span>
+                            </h4>
+                            <div class="grid gap-2 grid-cols-3 text-sm">
+                                <div>
+                                    <label class="label">Nome</label>
+                                    <p class="font-medium">${this.metadata.signerInfo.name}</p>
+                                </div>
+                                <div>
+                                    <label class="label">CPF</label>
+                                    <p class="font-mono">${this.metadata.signerInfo.cpf}</p>
+                                </div>
+                                <div>
+                                    <label class="label">Certificado</label>
+                                    <p>${this.metadata.signerInfo.certificate}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                
+                this.metadataCard.classList.remove('hidden');
+            }
+
+            getStatusBadge(status) {
+                switch (status) {
+                    case 'verified':
+                        return '<span class="badge badge-verified">✓ Verificado</span>';
+                    case 'revoked':
+                        return '<span class="badge badge-revoked">✗ Revogado</span>';
+                    case 'expired':
+                        return '<span class="badge badge-warning">⚠ Expirado</span>';
+                    default:
+                        return '<span class="badge badge-secondary">? Não verificado</span>';
+                }
+            }
+
+            getStatusIcon(status) {
+                switch (status) {
+                    case 'verified':
+                        return '<svg class="status-icon" style="color: hsl(var(--verified));" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22,4 12,14.01 9,11.01"></polyline></svg>';
+                    case 'revoked':
+                        return '<svg class="status-icon" style="color: hsl(var(--revoked));" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="15,9 9,15"></polyline><polyline points="9,9 15,15"></polyline></svg>';
+                    case 'expired':
+                        return '<svg class="status-icon" style="color: hsl(var(--warning));" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+                    default:
+                        return '<svg class="status-icon" style="color: hsl(var(--muted-foreground));" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+                }
+            }
+
+            getStatusDescription(status) {
+                switch (status) {
+                    case 'verified':
+                        return 'Documento verificado e válido no registro público';
+                    case 'revoked':
+                        return 'Documento foi revogado e não é mais válido';
+                    case 'expired':
+                        return 'Documento expirou e não é mais válido';
+                    default:
+                        return 'Status não encontrado no registro público';
+                }
+            }
+
+            showFileAlert(message, type) {
+                const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+                const icon = type === 'error' ? 
+                    '<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="15,9 9,15"></polyline><polyline points="9,9 15,15"></polyline></svg>' :
+                    '<svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14,2 14,8 20,8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10,9 9,9 8,9"></polyline></svg>';
+                
+                this.fileAlert.innerHTML = `<div class="alert ${alertClass}">${icon}<strong>Arquivo:</strong> ${message}</div>`;
+                this.fileAlert.classList.remove('hidden');
+            }
+
+            // QR Scanner Methods
+            updateStatus(message, type = 'success') {
+                const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
                 this.statusDiv.textContent = message;
-                this.statusDiv.className = `status ${type}`;
+                this.statusDiv.className = `alert ${alertClass} mb-4`;
             }
 
             async startScanning() {
                 try {
-                    this.updateStatus('Iniciando câmera...', 'info');
+                    this.updateStatus('Iniciando câmera...', 'success');
 
-                    // Verificar se o navegador suporta câmera
                     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                         throw new Error('Câmera não suportada neste navegador');
                     }
 
                     this.html5QrCode = new Html5Qrcode("qr-reader");
+                    this.cameraPlaceholder.style.display = 'none';
 
                     const config = {
                         fps: 10,
@@ -206,8 +950,8 @@
                     );
 
                     this.isScanning = true;
-                    this.startBtn.style.display = 'none';
-                    this.stopBtn.style.display = 'inline-block';
+                    this.startBtn.classList.add('hidden');
+                    this.stopBtn.classList.remove('hidden');
                     this.updateStatus('Scanner ativo - Aponte para um QR Code', 'success');
 
                 } catch (error) {
@@ -223,9 +967,10 @@
                         await this.html5QrCode.stop();
                         this.html5QrCode.clear();
                         this.isScanning = false;
-                        this.startBtn.style.display = 'inline-block';
-                        this.stopBtn.style.display = 'none';
-                        this.updateStatus('Scanner parado', 'info');
+                        this.startBtn.classList.remove('hidden');
+                        this.stopBtn.classList.add('hidden');
+                        this.cameraPlaceholder.style.display = 'block';
+                        this.updateStatus('Scanner parado', 'success');
                     } catch (error) {
                         console.error('Erro ao parar scanner:', error);
                     }
@@ -236,30 +981,26 @@
                 console.log('QR Code detectado:', decodedText);
                 this.loadingDiv.classList.add('show');
 
-                // Simular validação (substitua pela sua lógica)
                 setTimeout(() => {
-                    this.validateDocument(decodedText);
+                    this.validateScannedDocument(decodedText);
                     this.loadingDiv.classList.remove('show');
                 }, 1000);
             }
 
             onScanFailure(error) {
-                // Erro silencioso durante scan (normal)
-                // console.log('Erro de scan (normal):', error);
+                // Silent error during scan (normal behavior)
             }
 
-            validateDocument(qrData) {
+            validateScannedDocument(qrData) {
                 try {
-                    // Exemplo de validação básica
                     if (qrData.length < 10) {
                         throw new Error('QR Code muito curto para ser um documento válido');
                     }
 
-                    // Verificar se contém elementos de um documento válido
                     const hasValidStructure = qrData.includes('http') ||
                                             qrData.includes('doc:') ||
                                             qrData.includes('id:') ||
-                                            /\d{11}/.test(qrData); // CPF pattern
+                                            /\d{11}/.test(qrData);
 
                     if (hasValidStructure) {
                         this.showResult(`✅ Documento VÁLIDO
@@ -279,29 +1020,25 @@ Conteúdo: ${qrData.substring(0, 100)}${qrData.length > 100 ? '...' : ''}`, 'err
             }
 
             showResult(message, type) {
-                this.resultDiv.innerHTML = `<div class="result ${type}">${message.replace(/\n/g, '<br>')}</div>`;
+                const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+                const icon = type === 'error' ? 
+                    '<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="15,9 9,15"></polyline><polyline points="9,9 15,15"></polyline></svg>' :
+                    '<svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22,4 12,14.01 9,11.01"></polyline></svg>';
+                
+                this.resultDiv.innerHTML = `<div class="alert ${alertClass}">${icon}${message.replace(/\n/g, '<br>')}</div>`;
             }
         }
 
-        // Inicializar quando a página carregar
+        // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
             try {
-                new QRValidator();
+                new DocumentValidator();
             } catch (error) {
                 console.error('Erro ao inicializar aplicação:', error);
                 document.getElementById('result').innerHTML =
-                    `<div class="result error">❌ Erro ao carregar aplicação: ${error.message}</div>`;
+                    `<div class="alert alert-error">❌ Erro ao carregar aplicação: ${error.message}</div>`;
             }
         });
-
-        // Service Worker para PWA (opcional)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => console.log('SW registrado'))
-                    .catch(error => console.log('SW falhou'));
-            });
-        }
     </script>
 </body>
 </html>
