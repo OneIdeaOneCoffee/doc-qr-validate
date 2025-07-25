@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Documentos QR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .scanner-container {
+            margin: 20px 0;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qr-reader {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+            color: #495057;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Validador de Documentos QR</h1>
+
+        <div class="status" id="status">
+            Clique em "Iniciar Scanner" para começar
+        </div>
+
+        <div class="scanner-container">
+            <div id="qr-reader"></div>
+            <div id="camera-placeholder" style="display: none;">
+                <p>📷 Aguardando acesso à câmera...</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="start-scan">Iniciar Scanner</button>
+            <button class="btn" id="stop-scan" style="display: none;">Parar Scanner</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <p>🔄 Processando QR Code...</p>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <!-- QR Code Scanner Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+    <script>
+        class QRValidator {
+            constructor() {
+                this.html5QrCode = null;
+                this.isScanning = false;
+                this.initializeElements();
+                this.attachEventListeners();
+            }
+
+            initializeElements() {
+                this.startBtn = document.getElementById('start-scan');
+                this.stopBtn = document.getElementById('stop-scan');
+                this.resultDiv = document.getElementById('result');
+                this.statusDiv = document.getElementById('status');
+                this.loadingDiv = document.getElementById('loading');
+                this.qrReaderDiv = document.getElementById('qr-reader');
+            }
+
+            attachEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startScanning());
+                this.stopBtn.addEventListener('click', () => this.stopScanning());
+            }
+
+            updateStatus(message, type = 'info') {
+                this.statusDiv.textContent = message;
+                this.statusDiv.className = `status ${type}`;
+            }
+
+            async startScanning() {
+                try {
+                    this.updateStatus('Iniciando câmera...', 'info');
+
+                    // Verificar se o navegador suporta câmera
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error('Câmera não suportada neste navegador');
+                    }
+
+                    this.html5QrCode = new Html5Qrcode("qr-reader");
+
+                    const config = {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0
+                    };
+
+                    await this.html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        this.onScanSuccess.bind(this),
+                        this.onScanFailure.bind(this)
+                    );
+
+                    this.isScanning = true;
+                    this.startBtn.style.display = 'none';
+                    this.stopBtn.style.display = 'inline-block';
+                    this.updateStatus('Scanner ativo - Aponte para um QR Code', 'success');
+
+                } catch (error) {
+                    console.error('Erro ao iniciar scanner:', error);
+                    this.updateStatus(`Erro: ${error.message}`, 'error');
+                    this.showResult(`❌ Falha ao acessar câmera: ${error.message}`, 'error');
+                }
+            }
+
+            async stopScanning() {
+                if (this.html5QrCode && this.isScanning) {
+                    try {
+                        await this.html5QrCode.stop();
+                        this.html5QrCode.clear();
+                        this.isScanning = false;
+                        this.startBtn.style.display = 'inline-block';
+                        this.stopBtn.style.display = 'none';
+                        this.updateStatus('Scanner parado', 'info');
+                    } catch (error) {
+                        console.error('Erro ao parar scanner:', error);
+                    }
+                }
+            }
+
+            onScanSuccess(decodedText, decodedResult) {
+                console.log('QR Code detectado:', decodedText);
+                this.loadingDiv.classList.add('show');
+
+                // Simular validação (substitua pela sua lógica)
+                setTimeout(() => {
+                    this.validateDocument(decodedText);
+                    this.loadingDiv.classList.remove('show');
+                }, 1000);
+            }
+
+            onScanFailure(error) {
+                // Erro silencioso durante scan (normal)
+                // console.log('Erro de scan (normal):', error);
+            }
+
+            validateDocument(qrData) {
+                try {
+                    // Exemplo de validação básica
+                    if (qrData.length < 10) {
+                        throw new Error('QR Code muito curto para ser um documento válido');
+                    }
+
+                    // Verificar se contém elementos de um documento válido
+                    const hasValidStructure = qrData.includes('http') ||
+                                            qrData.includes('doc:') ||
+                                            qrData.includes('id:') ||
+                                            /\d{11}/.test(qrData); // CPF pattern
+
+                    if (hasValidStructure) {
+                        this.showResult(`✅ Documento VÁLIDO
+
+Dados: ${qrData.substring(0, 100)}${qrData.length > 100 ? '...' : ''}
+
+Timestamp: ${new Date().toLocaleString()}`, 'success');
+                    } else {
+                        this.showResult(`⚠️ QR Code lido, mas estrutura não reconhecida como documento válido
+
+Conteúdo: ${qrData.substring(0, 100)}${qrData.length > 100 ? '...' : ''}`, 'error');
+                    }
+
+                } catch (error) {
+                    this.showResult(`❌ Erro na validação: ${error.message}`, 'error');
+                }
+            }
+
+            showResult(message, type) {
+                this.resultDiv.innerHTML = `<div class="result ${type}">${message.replace(/\n/g, '<br>')}</div>`;
+            }
+        }
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                new QRValidator();
+            } catch (error) {
+                console.error('Erro ao inicializar aplicação:', error);
+                document.getElementById('result').innerHTML =
+                    `<div class="result error">❌ Erro ao carregar aplicação: ${error.message}</div>`;
+            }
+        });
+
+        // Service Worker para PWA (opcional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registrado'))
+                    .catch(error => console.log('SW falhou'));
+            });
+        }
+    </script>
+</body>
+</html>
